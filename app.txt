@@ -1,0 +1,13 @@
+StAuth10244: I Nguyen Duc Long, 000837437 certify that this material is my original work. 
+    No other person's work has been used without due acknowledgement. I have not made my work available to anyone else.
+
+This application was designed for some type of user
+1. Someone who wants to know the locations of parks in Hamilton
+2. A tourist to Hamilton looking to see interesting things
+3. Someone who wants to know the locations of Hotel, Motel or Campus Accommodations in Hamilton
+
+The feature I chose to implement that we did not go over with our in-class examples
+1. TravelMode: 'WALKING' with customized line (dotted red line)
+2. Allow the user to put a marker for their location on the map via clicking a geolocation button.
+3. Allow the user to put a marker for their location on the map via entering an address into an input textbox.
+4. Allow the user to obtain directions from their current location marker to another location marker on the map

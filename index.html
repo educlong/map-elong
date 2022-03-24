@@ -1,0 +1,255 @@
+<!--StAuth10244: I Nguyen Duc Long, 000837437 certify that this material is my original work. 
+    No other person's work has been used without due acknowledgement. I have not made my work available to anyone else.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maps and Geolocation</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" 
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+      #map {
+        height: 500px;
+        width: 100%;
+      }
+      body {
+        overflow-x: hidden;
+      }
+    </style>
+</head>
+<body>
+    
+</body>
+</html>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-9 mr-0 pr-0">
+                <div class="container-fluid mr-0 pr-0">
+                    <div class="row mt-2">
+                        <div class="col-sm-2 d-flex justify-content-center mt-2">
+                            <strong style="font-size:22px;">Address:</strong> 
+                        </div>
+                        <div class="col-sm-9">
+                            <input type="text" id="address" size="100" style="font-size:22px;" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-12">
+                            <span id="coords" style="font-size:22px;"></span>
+                        </div>
+                    </div>
+                    <div class="row d-flex justify-content-center">
+                        <div class="col-sm-12">
+                            <div id="map"></div>
+                        </div>
+                    </div>
+                    <br />
+                    <div class="row d-flex justify-content-center">
+                        <button type="button" class="btn btn-primary ml-3 mr-3" id="parks">Parks</button>
+                        <button type="button" class="btn btn-primary ml-3 mr-3" id="tourism-points">Tourism Points</button>
+                        <button type="button" class="btn btn-primary ml-3 mr-3" id="accommodations">Accommodations</button>
+                        <button type="button" class="btn btn-primary ml-3 mr-3" id="all">Show all</button>
+                        <button type="button" class="btn btn-primary ml-3 mr-3" id="geolocation">Geolocation</button>
+                    </div>
+                    <div class="row d-flex justify-content-center">
+                        <span id="whereami"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-3 ml-0 pl-0 mt-2">
+                <div id="directionspanel" style="font-size: small;"></div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script async
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCbsua4EskTMpwMIvO5vkvTgw35rhCwTfs&callback=initMap">
+    </script>
+    <!--At least two buttons on the website that allow you to filter which markers display on the map. -->
+    <script src="parks.js"></script>
+    <script src="tourism_points.js"></script>
+    <script src="accommodations.js"></script>
+    <script>
+        var map;
+        var markers = [];
+        function initMap()
+        {
+            map = new google.maps.Map(document.getElementById("map"), 
+                {center: {lat: 43.2557, lng: -79.8711}, //center of Hamilton
+                zoom: 10,
+            });
+            infowindow = new google.maps.InfoWindow();
+            marker_clicked = function() {
+                infowindow.close();
+                infowindow.setContent(this.NAME);
+                infowindow.open(map, this);
+                if (!navigator.geolocation.getCurrentPosition)
+                    x.innerHTML = "Geolocation is not supported by this browser.";
+                else
+                //Allow the user to obtain directions from their current location marker to another location marker on the map
+                    navigator.geolocation.getCurrentPosition((position)=>{
+                        var marker = new google.maps.Marker({
+                            map: map,
+                            position: {lat: position.coords.latitude,  lng: position.coords.longitude },
+                            icon: "http://maps.google.com/mapfiles/kml/paddle/ylw-blank.png"
+                        });
+                        directionsService = new google.maps.DirectionsService();
+                        directionsRenderer = new google.maps.DirectionsRenderer({map:map,
+                                      polylineOptions:{
+                                        strokeColor: '#C83939',
+                                        strokeOpacity: 0,
+                                        strokeWeight: 4,
+                                        icons: [{
+                                            icon: {
+                                            path: google.maps.SymbolPath.CIRCLE,
+                                            fillColor: '#C83939',
+                                            fillOpacity: 1,
+                                            scale: 2,
+                                            strokeColor: '#C83939',
+                                            strokeOpacity: 1,
+                                            },
+                                            offset: '0',
+                                            repeat: '10px'
+                                        }]
+                                      }});
+                        request = {
+                            origin: `${position.coords.latitude}, ${position.coords.longitude}`,
+                            destination: `${this.POSITION.lat}, ${this.POSITION.lng}`,
+                            travelMode: 'WALKING',
+                        };
+                        directionsService.route(request, function(result, status) {
+                            if (status == 'OK') {
+                                directionsRenderer.setDirections(result);
+                                document.getElementById("directionspanel").innerHTML="";
+                                directionsRenderer.setPanel(document.getElementById("directionspanel"));
+                            }
+                        });
+                    }, showError);
+            }
+            get_mark = function(arrHamilton){
+                for (i = 1; i < arrHamilton[0].features.length; 
+                    i = (arrHamilton!==accommodations ? (arrHamilton!==parks ? (i+25) : (i+60)) : (i+3))){
+                    var properties = arrHamilton[0].features[i].properties;
+                    var coordinates = arrHamilton[0].features[i].geometry.coordinates
+                    new_icon = "http://maps.google.com/mapfiles/kml/paddle/"+
+                        (arrHamilton!==accommodations ? (arrHamilton!==parks ? "grn" : "blu") : "pink") + "-blank.png";
+                    name_marker =  arrHamilton!==tourismPoint ? properties.NAME : properties.TITLE
+                    middleCoordinatesIndex = arrHamilton!==parks ? Math.floor(coordinates[0].length/2) : 0;
+                    contentString = (arrHamilton!==parks) ? (`<h3>${name_marker}</h3>
+                            <div class="mt-1">Address: ${properties.ADDRESS}</div>`+ (arrHamilton===tourismPoint ? 
+                            `<div class="mt-1">Phone: ${properties.PHONE}</div>
+                            <div class="mt-1">Fax: ${properties.FAX}</div>
+                            <div class="mt-1">Email: ${properties.EMAIL}</div>` :
+                            `<div class="mt-1">Community: ${properties.COMMUNITY}</div>
+                            <div class="mt-1">Category: ${properties.CATEGORY}</div>`)+
+                            `<div class="mt-1">Website: <a href="${arrHamilton===tourismPoint ?properties.URL :properties.WEBSITE_URL}">
+                                ${arrHamilton===tourismPoint ?properties.URL :properties.WEBSITE_URL}</a></div>`
+                            +(arrHamilton===tourismPoint ? `<div class="mt-1">Description: ${properties.DESCRIPTION}</div>`:""))
+                        : (`<h3>${name_marker}</h3>
+                            <div class="mt-1">Owner name: ${properties.OWNER_NAME}</div>
+                            <div class="mt-1">Classification: ${properties.CLASSIFICATION}</div> 
+                            <div class="mt-1">Type: ${properties.TYPE}</div> 
+                            <div class="mt-1">Zoning Code: ${properties.ZONING_CODE}</div>
+                            `);
+                    longitude = arrHamilton!==parks ? coordinates[0] : (coordinates[0][0][0]+coordinates[0][middleCoordinatesIndex][0])/2
+                    latitude = arrHamilton!==parks ? coordinates[1] : (coordinates[0][0][1]+coordinates[0][middleCoordinatesIndex][1])/2
+                    new_marker = new google.maps.Marker({
+                        name: arrHamilton[0].name,
+                        position: {lat: latitude,  lng: longitude },
+                        title: name_marker,
+                        icon: new_icon
+                    });
+                    new_marker.setMap(map);
+                    new_marker.NAME = contentString;
+                    new_marker.POSITION = {lat: latitude,  lng: longitude };
+                    new_marker.addListener('click', marker_clicked);
+                    markers.push(new_marker);
+                }
+            }
+            get_mark(parks)
+            get_mark(tourismPoint)
+            get_mark(accommodations)
+            document.getElementById("all").onclick = ()=>{for (i = 0; i < markers.length; i++) markers[i].setMap(map);};
+            filtering = function(arrHamilton){
+                for (i = 0; i < markers.length; i++)
+                    if (markers[i].name == arrHamilton[0].name)
+                        markers[i].setMap(map);
+                    else 
+                        markers[i].setMap(null);
+            }
+            document.getElementById("parks").onclick = ()=>this.filtering(parks);
+            document.getElementById("tourism-points").onclick = ()=>this.filtering(tourismPoint);
+            document.getElementById("accommodations").onclick = ()=>this.filtering(accommodations);
+
+            geocoder = new google.maps.Geocoder();
+        }
+
+
+        //============= Allow the user to put a marker for their location on the map via clicking a geolocation button.
+        var x = document.getElementById("whereami");
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    x.innerHTML = "User denied the request for Geolocation."
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    x.innerHTML = "Location information is unavailable."
+                    break;
+                case error.TIMEOUT:
+                    x.innerHTML = "The request to get user location timed out."
+                    break;
+                case error.UNKNOWN_ERROR:
+                    x.innerHTML = "An unknown error occurred."
+                    break;
+            }
+        }
+        getLocation = function() {
+            if (navigator.geolocation.getCurrentPosition)
+                navigator.geolocation.getCurrentPosition((position)=>{
+                    var marker = new google.maps.Marker({
+                        map: map,
+                        position: {lat: position.coords.latitude,  lng: position.coords.longitude },
+                        icon: "http://maps.google.com/mapfiles/kml/paddle/ylw-blank.png"
+                    });
+                }, showError);
+            else
+                x.innerHTML = "Geolocation is not supported by this browser.";
+        }
+        document.getElementById("geolocation").onclick = getLocation;
+
+
+        
+        //============= Allow the user to put a marker for their location on the map via entering an address into an input textbox.
+        function codeAddress() {
+            var address = document.getElementById('address').value;
+            geocoder.geocode( { 'address': address}, function(results, status) {
+                if (status == 'OK') {
+                    var marker = new google.maps.Marker({
+                        map: map,
+                        position: results[0].geometry.location,
+                        icon: "http://maps.google.com/mapfiles/kml/paddle/ylw-blank.png"
+                    });
+                } else 
+                    alert('Geocode was not successful for the following reason: ' + status);
+            });
+        }
+        var input = document.getElementById("address");
+        input.addEventListener("keyup", function(event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                codeAddress();
+            }
+        });
+    </script>
+
+</body>
+</html>
+
+
